@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, ActivityIndicator, Alert, Button, Platform, Share } from 'react-native';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, ActivityIndicator, Alert, Button, Platform, Share, Linking, Modal, TextInput, ScrollView } from 'react-native';
 import { Audio } from 'expo-av';
 import * as Clipboard from 'expo-clipboard';
 import * as Notifications from 'expo-notifications';
+import { Ionicons } from '@expo/vector-icons';
 import { initWatchConnectivity } from '../services/watch';
-import { transcribeAudio, organizeText, generateTweet } from '../services/ai';
-import { loadAllNotes, saveNote, deleteNote, initStorage } from '../services/storage';
+import { transcribeAudio, organizeText, generateTweet, DEFAULT_TWITTER_PROMPT } from '../services/ai';
+import { loadAllNotes, saveNote, deleteNote, initStorage, getStorageType, setStoragePreference, StorageType } from '../services/storage';
+import LoadingScreen from '../components/LoadingScreen';
+import { useTheme } from '../context/ThemeContext';
+import { StatusBar } from 'expo-status-bar';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -32,37 +36,68 @@ interface Recording {
 }
 
 export default function HomeScreen() {
+    const [isAppReady, setIsAppReady] = useState(false);
     const [recordings, setRecordings] = useState<Recording[]>([]);
     const [recording, setRecording] = useState<Audio.Recording | null>(null);
     const [isRecording, setIsRecording] = useState(false);
     const [mode, setMode] = useState<'notes' | 'twitter'>('notes');
+    const [twitterPrompt, setTwitterPrompt] = useState(DEFAULT_TWITTER_PROMPT);
+    const [isSettingsVisible, setIsSettingsVisible] = useState(false);
+    const [isWatchReachable, setIsWatchReachable] = useState(false);
+    const [isWatchAppActive, setIsWatchAppActive] = useState(false);
     const [permissionResponse, requestPermission] = Audio.usePermissions();
+    const [storageType, setStorageTypeState] = useState<StorageType>('local');
+    const { colors, isDark } = useTheme();
 
-    useEffect(() => {
-        // Load saved notes on startup
-        const loadNotes = async () => {
-            const savedNotes = await loadAllNotes();
-            setRecordings(savedNotes as Recording[]);
+    const handleNewFile = async (uri: string) => {
+        const newRecording: Recording = {
+            id: Date.now().toString(),
+            uri,
+            timestamp: Date.now(),
+            mode: mode,
+            isLoading: true,
         };
-        loadNotes();
 
-        const getPermissions = async () => {
-            const { status } = await Notifications.requestPermissionsAsync();
-            if (status !== 'granted') {
-                console.log('Notification permissions denied');
+        setRecordings(prev => [newRecording, ...prev]);
+
+        try {
+            // 1. Transcribe
+            const transcript = await transcribeAudio(uri);
+
+            // 2. Process based on mode
+            let summary: { bulletPoints: string[], messages: string[] } | undefined;
+            let tweet: string | undefined;
+
+            if (newRecording.mode === 'twitter') {
+                tweet = await generateTweet(transcript, twitterPrompt);
+            } else {
+                summary = await organizeText(transcript);
             }
-        };
-        getPermissions();
 
-        const unsubscribe = initWatchConnectivity((file) => {
-            handleNewFile(file.uri);
-        });
+            // 3. Save to Storage
+            const savedId = await saveNote({
+                id: newRecording.id,
+                timestamp: newRecording.timestamp,
+                transcript,
+                summary,
+                tweet
+            });
 
-        // Auto-start recording
-        startRecording();
-
-        return unsubscribe;
-    }, []);
+            setRecordings(prev => prev.map(rec =>
+                rec.id === newRecording.id
+                    ? { ...rec, id: savedId, transcript, summary, tweet, isLoading: false }
+                    : rec
+            ));
+        } catch (error) {
+            console.error(error);
+            Alert.alert('Error', 'Failed to process audio');
+            setRecordings(prev => prev.map(rec =>
+                rec.id === newRecording.id
+                    ? { ...rec, isLoading: false, transcript: 'Error processing audio' }
+                    : rec
+            ));
+        }
+    };
 
     const startRecording = async () => {
         try {
@@ -114,55 +149,67 @@ export default function HomeScreen() {
         }
     };
 
-    const handleNewFile = async (uri: string) => {
-        const newRecording: Recording = {
-            id: Date.now().toString(),
-            uri,
-            timestamp: Date.now(),
-            mode: mode,
-            isLoading: true,
+    useEffect(() => {
+        // Load settings and notes
+        const init = async () => {
+            // Artificial delay to show the loading screen (optional, but good for UX if load is too fast)
+            // await new Promise(resolve => setTimeout(resolve, 2000)); 
+            const type = await getStorageType();
+            setStorageTypeState(type);
+            const savedNotes = await loadAllNotes();
+            setRecordings(savedNotes as Recording[]);
+            setIsAppReady(true);
         };
+        init();
 
-        setRecordings(prev => [newRecording, ...prev]);
-
-        try {
-            // 1. Transcribe
-            const transcript = await transcribeAudio(uri);
-
-            // 2. Process based on mode
-            let summary: { bulletPoints: string[], messages: string[] } | undefined;
-            let tweet: string | undefined;
-
-            if (newRecording.mode === 'twitter') {
-                tweet = await generateTweet(transcript);
-            } else {
-                summary = await organizeText(transcript);
+        const getPermissions = async () => {
+            const { status } = await Notifications.requestPermissionsAsync();
+            if (status !== 'granted') {
+                console.log('Notification permissions denied');
             }
+        };
+        getPermissions();
 
-            // 3. Save to Storage
-            await saveNote({
-                id: newRecording.id,
-                timestamp: newRecording.timestamp,
-                transcript,
-                summary,
-                tweet
-            });
+        const unsubscribe = initWatchConnectivity(
+            (file) => {
+                handleNewFile(file.uri);
+            },
+            (reachable) => {
+                setIsWatchReachable(reachable);
+            },
+            (context) => {
+                // Assuming the watch sends { active: true } or similar in application context
+                if (context && context.active !== undefined) {
+                    setIsWatchAppActive(context.active);
+                }
+            }
+        );
 
-            setRecordings(prev => prev.map(rec =>
-                rec.id === newRecording.id
-                    ? { ...rec, transcript, summary, tweet, isLoading: false }
-                    : rec
-            ));
-        } catch (error) {
-            console.error(error);
-            Alert.alert('Error', 'Failed to process audio');
-            setRecordings(prev => prev.map(rec =>
-                rec.id === newRecording.id
-                    ? { ...rec, isLoading: false, transcript: 'Error processing audio' }
-                    : rec
-            ));
+        // Auto-start recording
+        startRecording();
+
+        return unsubscribe;
+    }, []);
+
+    if (!isAppReady) {
+        return <LoadingScreen />;
+    }
+
+    const handleStorageChange = async (type: StorageType) => {
+        await setStoragePreference(type);
+        setStorageTypeState(type);
+        // Reload notes for the new storage
+        setRecordings([]); // Clear current list
+        try {
+            const notes = await loadAllNotes();
+            setRecordings(notes as Recording[]);
+        } catch (e) {
+            console.error(e);
+            Alert.alert('Error', 'Failed to load notes from ' + type);
         }
     };
+
+
 
     const getContentToShare = (item: Recording) => {
         let content = '';
@@ -192,29 +239,7 @@ export default function HomeScreen() {
         }
     };
 
-    const handleNotion = async (item: Recording) => {
-        const content = getContentToShare(item);
-        try {
-            await Share.share({
-                message: `Saved to Notion:\n\n${content}`,
-                title: 'Save to Notion'
-            });
-        } catch (error) {
-            Alert.alert('Error', 'Could not share to Notion');
-        }
-    };
 
-    const handleDrive = async (item: Recording) => {
-        const content = getContentToShare(item);
-        try {
-            await Share.share({
-                message: `Saved to Drive:\n\n${content}`,
-                title: 'Save to Drive'
-            });
-        } catch (error) {
-            Alert.alert('Error', 'Could not share to Drive');
-        }
-    };
 
     const handleDelete = (item: Recording) => {
         Alert.alert(
@@ -241,55 +266,64 @@ export default function HomeScreen() {
         );
     };
 
+    const handlePostTweet = async (tweet: string) => {
+        const url = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweet)}`;
+        const supported = await Linking.canOpenURL(url);
+
+        if (supported) {
+            await Linking.openURL(url);
+        } else {
+            // Fallback strategy if needed, but web URL usually works on iOS/Android even without app
+            await Linking.openURL(url);
+        }
+    };
+
     const renderItem = ({ item }: { item: Recording }) => (
-        <View style={styles.card}>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.cardHeader}>
                 <Text style={styles.date}>{new Date(item.timestamp).toLocaleString()}</Text>
                 <TouchableOpacity onPress={() => handleDelete(item)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <Text style={styles.deleteButton}>✕</Text>
+                    <Text style={[styles.deleteButton, { color: colors.subtext }]}>✕</Text>
                 </TouchableOpacity>
             </View>
 
             {item.isLoading ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={colors.text} />
             ) : (
                 <>
-                    <Text style={styles.sectionTitle}>Transcript:</Text>
-                    <Text style={styles.text}>{item.transcript}</Text>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Transcript:</Text>
+                    <Text style={[styles.text, { color: colors.text }]}>{item.transcript}</Text>
 
                     {item.tweet && (
                         <>
                             <Text style={styles.sectionTitle}>Generated Tweet:</Text>
                             <Text style={styles.tweetText}>{item.tweet}</Text>
+                            <TouchableOpacity style={styles.tweetButton} onPress={() => item.tweet && handlePostTweet(item.tweet)}>
+                                <Text style={styles.tweetButtonText}>Post Tweet</Text>
+                            </TouchableOpacity>
                         </>
                     )}
 
                     {item.summary && (
                         <>
-                            <Text style={styles.sectionTitle}>Bullet Points:</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>Bullet Points:</Text>
                             {item.summary.bulletPoints.map((point, index) => (
-                                <Text key={index} style={styles.bulletPoint}>• {point}</Text>
+                                <Text key={index} style={[styles.bulletPoint, { color: colors.text }]}>• {point}</Text>
                             ))}
 
-                            <Text style={styles.sectionTitle}>Messages:</Text>
+                            <Text style={[styles.sectionTitle, { color: colors.text }]}>Messages:</Text>
                             {item.summary.messages.map((msg, index) => (
-                                <Text key={index} style={styles.message}>- {msg}</Text>
+                                <Text key={index} style={[styles.message, { color: colors.text }]}>- {msg}</Text>
                             ))}
                         </>
                     )}
 
-                    <View style={styles.actionRow}>
-                        <TouchableOpacity style={styles.actionButton} onPress={() => handleCopy(item)}>
-                            <Text style={styles.actionButtonText}>Copy</Text>
+                    <View style={[styles.actionRow, { borderTopColor: colors.border }]}>
+                        <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.inputBackground }]} onPress={() => handleCopy(item)}>
+                            <Text style={[styles.actionButtonText, { color: colors.text }]}>Copy</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionButton} onPress={() => handleShare(item)}>
-                            <Text style={styles.actionButtonText}>Share</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionButton} onPress={() => handleNotion(item)}>
-                            <Text style={styles.actionButtonText}>Notion</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.actionButton} onPress={() => handleDrive(item)}>
-                            <Text style={styles.actionButtonText}>Drive</Text>
+                        <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.inputBackground }]} onPress={() => handleShare(item)}>
+                            <Text style={[styles.actionButtonText, { color: colors.text }]}>Share</Text>
                         </TouchableOpacity>
                     </View>
                 </>
@@ -298,15 +332,94 @@ export default function HomeScreen() {
     );
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.header}>Vecord</Text>
+        <View style={[styles.container, { backgroundColor: colors.background }]}>
+            <StatusBar style={isDark ? 'light' : 'dark'} />
+            <View style={styles.headerContainer}>
+                <Text style={[styles.header, { color: colors.text }]}>Vecord</Text>
+                <TouchableOpacity onPress={() => setIsSettingsVisible(true)} style={styles.settingsButton}>
+                    <Ionicons name="settings-outline" size={24} color={colors.text} />
+                </TouchableOpacity>
+            </View>
+
+            <View style={styles.statusContainer}>
+                {isWatchAppActive ? (
+                    <View style={[styles.statusBadge, { backgroundColor: colors.statusBadgeActive }]}>
+                        <View style={[styles.statusDot, { backgroundColor: colors.tint }]} />
+                        <Text style={[styles.statusText, { color: colors.text }]}>Watch App Active</Text>
+                    </View>
+                ) : isWatchReachable ? (
+                    <View style={[styles.statusBadge, { backgroundColor: colors.statusBadgeReachable }]}>
+                        <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
+                        <Text style={[styles.statusText, { color: colors.text }]}>Watch Connected</Text>
+                    </View>
+                ) : (
+                    <View style={[styles.statusBadge, { backgroundColor: colors.statusBadgeDisconnected }]}>
+                        <View style={[styles.statusDot, { backgroundColor: colors.danger }]} />
+                        <Text style={[styles.statusText, { color: colors.text }]}>Watch Disconnected</Text>
+                    </View>
+                )}
+            </View>
+
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={isSettingsVisible}
+                onRequestClose={() => setIsSettingsVisible(false)}
+            >
+                <View style={styles.modalView}>
+                    <View style={[styles.modalContent, { backgroundColor: colors.modalBackground }]}>
+                        <Text style={[styles.modalTitle, { color: colors.text }]}>Settings</Text>
+
+                        <Text style={styles.sectionHeader}>Storage</Text>
+                        <View style={[styles.segmentContainer, { backgroundColor: colors.inputBackground }]}>
+                            <TouchableOpacity
+                                style={[styles.segmentButton, storageType === 'local' && { backgroundColor: isDark ? '#555' : '#FFFFFF' }]}
+                                onPress={() => handleStorageChange('local')}
+                            >
+                                <Text style={[styles.segmentText, storageType === 'local' && { color: colors.text }]}>Local</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.segmentButton, storageType === 'cloud' && { backgroundColor: isDark ? '#555' : '#FFFFFF' }]}
+                                onPress={() => handleStorageChange('cloud')}
+                            >
+                                <Text style={[styles.segmentText, storageType === 'cloud' && { color: colors.text }]}>Cloud</Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        <Text style={[styles.sectionHeader, { marginTop: 20 }]}>Twitter Prompt</Text>
+                        <TextInput
+                            style={[styles.textInput, { backgroundColor: colors.inputBackground, color: colors.text }]}
+                            multiline
+                            value={twitterPrompt}
+                            onChangeText={setTwitterPrompt}
+                            placeholder="Enter system prompt..."
+                            placeholderTextColor={colors.subtext}
+                        />
+
+                        <View style={styles.modalButtons}>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.resetButton]}
+                                onPress={() => setTwitterPrompt(DEFAULT_TWITTER_PROMPT)}
+                            >
+                                <Text style={styles.modalButtonText}>Reset Default</Text>
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.modalButton, styles.saveButton]}
+                                onPress={() => setIsSettingsVisible(false)}
+                            >
+                                <Text style={styles.modalButtonText}>Done</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </View>
+            </Modal>
 
             <View style={styles.controls}>
                 <TouchableOpacity
-                    style={[styles.recordButton, isRecording && styles.recordingButton]}
+                    style={[styles.recordButton, isRecording && styles.recordingButton, { backgroundColor: colors.card, shadowColor: isDark ? '#000' : '#CCC' }]}
                     onPress={isRecording ? stopRecording : startRecording}
                 >
-                    <Text style={styles.recordButtonText}>
+                    <Text style={[styles.recordButtonText, { color: colors.text }]}>
                         {isRecording ? 'Stop Recording' : 'Start Recording'}
                     </Text>
                 </TouchableOpacity>
@@ -317,21 +430,21 @@ export default function HomeScreen() {
                 renderItem={renderItem}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.list}
-                ListEmptyComponent={<Text style={styles.emptyText}>No recordings yet. Record on your Watch or iPhone!</Text>}
+                ListEmptyComponent={<Text style={[styles.emptyText, { color: colors.subtext }]}>No recordings yet. Record on your Watch or iPhone!</Text>}
             />
 
-            <View style={styles.bottomMenu}>
+            <View style={[styles.bottomMenu, { backgroundColor: colors.card, borderTopColor: colors.border }]}>
                 <TouchableOpacity
-                    style={[styles.menuItem, mode === 'notes' && styles.activeMenuItem]}
+                    style={[styles.menuItem, mode === 'notes' && [styles.activeMenuItem, { borderBottomColor: colors.text }]]}
                     onPress={() => setMode('notes')}
                 >
-                    <Text style={[styles.menuText, mode === 'notes' && styles.activeMenuText]}>Notes</Text>
+                    <Text style={[styles.menuText, mode === 'notes' && { color: colors.text }]}>Notes</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={[styles.menuItem, mode === 'twitter' && styles.activeMenuItem]}
+                    style={[styles.menuItem, mode === 'twitter' && [styles.activeMenuItem, { borderBottomColor: colors.text }]]}
                     onPress={() => setMode('twitter')}
                 >
-                    <Text style={[styles.menuText, mode === 'twitter' && styles.activeMenuText]}>Twitter Tool</Text>
+                    <Text style={[styles.menuText, mode === 'twitter' && { color: colors.text }]}>Twitter Tool</Text>
                 </TouchableOpacity>
             </View>
         </View>
@@ -349,8 +462,113 @@ const styles = StyleSheet.create({
         fontSize: 24,
         fontWeight: 'bold',
         textAlign: 'center',
-        marginBottom: 20,
         color: '#FFFFFF', // White text
+    },
+    headerContainer: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 20,
+        position: 'relative',
+    },
+    settingsButton: {
+        position: 'absolute',
+        right: 20,
+        padding: 8,
+    },
+    settingsIcon: {
+        fontSize: 24,
+    },
+    modalView: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: 'rgba(0,0,0,0.8)',
+    },
+    modalContent: {
+        width: '90%',
+        backgroundColor: '#1A1A1A',
+        borderRadius: 20,
+        padding: 20,
+        shadowColor: '#000',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
+        elevation: 5,
+    },
+    modalTitle: {
+        fontSize: 20,
+        fontWeight: 'bold',
+        color: 'white',
+        marginBottom: 15,
+        textAlign: 'center',
+    },
+    sectionHeader: {
+        fontSize: 16,
+        fontWeight: '600',
+        color: '#888',
+        marginBottom: 10,
+        textTransform: 'uppercase',
+    },
+    segmentContainer: {
+        flexDirection: 'row',
+        backgroundColor: '#333',
+        borderRadius: 10,
+        padding: 4,
+        marginBottom: 10,
+    },
+    segmentButton: {
+        flex: 1,
+        paddingVertical: 8,
+        alignItems: 'center',
+        borderRadius: 8,
+    },
+    activeSegment: {
+        backgroundColor: '#555',
+    },
+    segmentText: {
+        color: '#888',
+        fontWeight: '600',
+    },
+    activeSegmentText: {
+        color: '#fff',
+    },
+    modalLabel: {
+        color: '#ccc',
+        marginBottom: 10,
+    },
+    textInput: {
+        backgroundColor: '#333',
+        color: 'white',
+        borderRadius: 10,
+        padding: 10,
+        height: 150,
+        textAlignVertical: 'top',
+        marginBottom: 20,
+    },
+    modalButtons: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+    },
+    modalButton: {
+        borderRadius: 10,
+        padding: 10,
+        elevation: 2,
+        minWidth: 100,
+        alignItems: 'center',
+    },
+    resetButton: {
+        backgroundColor: '#555',
+    },
+    saveButton: {
+        backgroundColor: '#1DA1F2',
+    },
+    modalButtonText: {
+        color: 'white',
+        fontWeight: 'bold',
     },
     controls: {
         alignItems: 'center',
@@ -494,5 +712,42 @@ const styles = StyleSheet.create({
         lineHeight: 24,
         marginTop: 4,
         marginBottom: 8,
+    },
+    tweetButton: {
+        backgroundColor: '#1DA1F2',
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+        borderRadius: 20,
+        alignSelf: 'flex-start',
+        marginTop: 8,
+        marginBottom: 12,
+    },
+    tweetButtonText: {
+        color: '#FFFFFF',
+        fontSize: 14,
+        fontWeight: '600',
+    },
+    statusContainer: {
+        alignItems: 'center',
+        marginTop: -10,
+        marginBottom: 20,
+    },
+    statusBadge: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    statusText: {
+        color: '#FFFFFF',
+        fontSize: 12,
+        fontWeight: '600',
+        marginLeft: 6,
+    },
+    statusDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
     },
 });

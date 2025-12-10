@@ -76,7 +76,9 @@ export const organizeText = async (text: string): Promise<{ bulletPoints: string
   }
 };
 
-export const generateTweet = async (text: string): Promise<string> => {
+export const DEFAULT_TWITTER_PROMPT = 'You are a social media expert. Convert the following text into an engaging tweet. Keep it under 280 characters, use appropriate hashtags, and make it sound authentic and personal. Return only the tweet content.';
+
+export const generateTweet = async (text: string, prompt: string = DEFAULT_TWITTER_PROMPT): Promise<string> => {
   if (!text || !text.trim()) {
     return '';
   }
@@ -89,7 +91,7 @@ export const generateTweet = async (text: string): Promise<string> => {
       messages: [
         {
           role: 'system',
-          content: 'You are a social media expert. Convert the following text into an engaging tweet. Keep it under 280 characters, use appropriate hashtags, and make it sound authentic and personal. Return only the tweet content.'
+          content: prompt
         },
         {
           role: 'user',

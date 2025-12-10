@@ -33,3 +33,11 @@ Clear cache:
 ```bash
 npx expo start -c
 ```
+
+---
+
+npx expo run:ios --device
+
+
+~/vecord $ npm run build-and-submit:ios
+
