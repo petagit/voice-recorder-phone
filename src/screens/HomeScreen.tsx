@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, FlatList, TouchableOpacity, ActivityIndicator, Alert, Button, Platform, Share, Linking, Modal, TextInput, ScrollView } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Text, View, FlatList, TouchableOpacity, ActivityIndicator, Alert, Button, Platform, Share, Linking, Modal, TextInput, ScrollView, Animated, Easing } from 'react-native';
 import { Audio } from 'expo-av';
 import * as Clipboard from 'expo-clipboard';
 import * as Notifications from 'expo-notifications';
@@ -288,7 +288,10 @@ export default function HomeScreen() {
             </View>
 
             {item.isLoading ? (
-                <ActivityIndicator size="small" color={colors.text} />
+                <View style={styles.loadingContainer}>
+                    <InternalProgressBar color="#FFA500" />
+                    <Text style={[styles.processingText, { color: colors.subtext }]}>Processing...</Text>
+                </View>
             ) : (
                 <>
                     <Text style={[styles.sectionTitle, { color: colors.text }]}>Transcript:</Text>
@@ -359,6 +362,18 @@ export default function HomeScreen() {
                     </View>
                 )}
             </View>
+
+            {/* Watch Debug Panel */}
+            <TouchableOpacity
+                style={[styles.debugPanel, { borderColor: colors.border, backgroundColor: colors.card }]}
+                onPress={() => Alert.alert('Watch Status', `Reachable: ${isWatchReachable}\nApp Active: ${isWatchAppActive}\n\nMake sure Vecord is installed on your Watch via the Watch app on iPhone.`)}
+            >
+                <Text style={[styles.debugTitle, { color: colors.text }]}>Watch Debug</Text>
+                <Text style={[styles.debugText, { color: colors.subtext }]}>
+                    Status: {isWatchReachable ? 'CONNECTED' : 'NOT REACHABLE'}
+                </Text>
+                <Text style={[styles.debugText, { color: colors.subtext, fontSize: 10 }]}>Tap for details</Text>
+            </TouchableOpacity>
 
             <Modal
                 animationType="slide"
@@ -750,4 +765,63 @@ const styles = StyleSheet.create({
         height: 8,
         borderRadius: 4,
     },
+    loadingContainer: {
+        width: '100%',
+        paddingVertical: 12,
+        borderRadius: 8,
+        position: 'relative',
+        overflow: 'hidden',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    processingText: {
+        fontSize: 14,
+        fontWeight: '600',
+        zIndex: 1,
+    },
+    debugPanel: {
+        margin: 16,
+        padding: 12,
+        borderRadius: 8,
+        borderWidth: 1,
+        alignItems: 'center',
+    },
+    debugTitle: {
+        fontSize: 14,
+        fontWeight: 'bold',
+        marginBottom: 4,
+    },
+    debugText: {
+        fontSize: 12,
+        marginBottom: 2,
+    },
 });
+
+const InternalProgressBar = ({ color, children }: { color: string, children?: React.ReactNode }) => {
+    const progress = React.useRef(new Animated.Value(0)).current;
+
+    React.useEffect(() => {
+        const animate = () => {
+            progress.setValue(0);
+            Animated.timing(progress, {
+                toValue: 1,
+                duration: 2000,
+                easing: Easing.inOut(Easing.ease),
+                useNativeDriver: false,
+            }).start(() => animate());
+        };
+        animate();
+    }, []);
+
+    const width = progress.interpolate({
+        inputRange: [0, 1],
+        outputRange: ['0%', '100%'],
+    });
+
+    return (
+        <View style={styles.loadingContainer}>
+            <Animated.View style={[StyleSheet.absoluteFill, { backgroundColor: color, width }]} />
+            {children}
+        </View>
+    );
+};

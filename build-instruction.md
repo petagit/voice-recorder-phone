@@ -52,6 +52,15 @@ Your app code relies on variables starting with `EXPO_PUBLIC_` (e.g., `EXPO_PUBL
 
 
 
+    eas build --platform ios --profile production
+    eas submit --platform ios
+
+    eas build --profile preview
+
+
+
+
+
 
 
 

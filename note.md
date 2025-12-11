@@ -41,3 +41,10 @@ npx expo run:ios --device
 
 ~/vecord $ npm run build-and-submit:ios
 
+git add .
+git commit -m "Update"
+git push
+
+
+npx expo prebuild --platform ios --clean
+npx expo run:ios --device

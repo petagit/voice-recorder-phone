@@ -33,21 +33,23 @@ export const supabase = isConfigured
             detectSessionInUrl: false,
         },
     })
-    : new Proxy({} as any, {
-        get: (target, prop) => {
-            // Return a function that logs a warning and returns an error-like object for any method call
-            // This is a rough mock to prevent "cannot read property of undefined" but operations will fail.
-            const warnAndReturn = () => {
-                console.warn(`Supabase accessed but not configured. Call to '${String(prop)}' ignored.`);
-                return { data: null, error: { message: 'Supabase not configured' } };
-            };
-
-            // If the property accessed is 'auth' etc, we might need a nested proxy, 
-            // but for now let's just make everything return the warner or a safe object.
-            if (prop === 'from') return () => new Proxy({}, {
-                get: () => warnAndReturn // Chain: supabase.from().select() -> warnAndReturn
-            });
-
-            return warnAndReturn;
-        }
-    });
+    : (() => {
+        // Recursive proxy to handle chaining (e.g. .from().select().order())
+        const noop = () => { };
+        const handler: ProxyHandler<any> = {
+            get: (target, prop) => {
+                if (prop === 'then') {
+                    // Make it awaitable - resolves to error object
+                    return (resolve: (val: any) => void) => {
+                        console.warn('Supabase operation ignored: Supabase is not configured.');
+                        resolve({ data: null, error: { message: 'Supabase not configured' } });
+                    };
+                }
+                return new Proxy(noop, handler); // Return self for chaining
+            },
+            apply: (target, thisArg, args) => {
+                return new Proxy(noop, handler); // Return self when called
+            }
+        };
+        return new Proxy(noop, handler) as any;
+    })();
