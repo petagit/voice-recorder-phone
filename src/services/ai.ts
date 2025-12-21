@@ -2,8 +2,12 @@ import axios from 'axios';
 
 // Replace with your actual API key or use a backend proxy
 const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY;
+const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 
-console.log('API Key Status:', OPENAI_API_KEY ? 'Present' : 'Missing', OPENAI_API_KEY?.slice(0, 5));
+console.log('API Key Status:',
+  OPENAI_API_KEY ? 'OpenAI Present' : 'OpenAI Missing',
+  GEMINI_API_KEY ? 'Gemini Present' : 'Gemini Missing'
+);
 
 export const transcribeAudio = async (uri: string): Promise<string> => {
   try {
@@ -37,38 +41,37 @@ export const organizeText = async (text: string): Promise<{ bulletPoints: string
     };
   }
 
-  console.log('Organizing text:', text);
+  console.log('Organizing text (Gemini 3):', text);
 
   try {
-    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a helpful assistant. Organize the following text into bullet points and short messages. Return JSON with keys "bulletPoints" (array of strings) and "messages" (array of strings).'
-        },
-        {
-          role: 'user',
-          content: text
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        contents: [{
+          parts: [{
+            text: `You are a helpful assistant. Organize the following text into bullet points and short messages. Return JSON with keys "bulletPoints" (array of strings) and "messages" (array of strings).\n\nText: ${text}`
+          }]
+        }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          thinkingConfig: {
+            thinkingLevel: "high"
+          }
         }
-      ],
-      response_format: { type: "json_object" }
-    }, {
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
       },
-    });
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
-    const content = JSON.parse(response.data.choices[0].message.content);
+    const content = JSON.parse(response.data.candidates[0].content.parts[0].text);
     return content;
   } catch (error) {
-    console.error('Organization error:', error);
+    console.error('Organization error (Gemini):', error);
     if (axios.isAxiosError(error)) {
       console.error('Status:', error.response?.status);
       console.error('Data:', JSON.stringify(error.response?.data, null, 2));
     }
-    // Return mock data on error for demo purposes
     return {
       bulletPoints: ['Error processing text', 'Check logs for details'],
       messages: ['Could not organize text.']
@@ -83,31 +86,33 @@ export const generateTweet = async (text: string, prompt: string = DEFAULT_TWITT
     return '';
   }
 
-  console.log('Generating tweet:', text);
+  console.log('Generating tweet (Gemini 3):', text);
 
   try {
-    const response = await axios.post('https://api.openai.com/v1/chat/completions', {
-      model: 'gpt-4o',
-      messages: [
-        {
-          role: 'system',
-          content: prompt
-        },
-        {
-          role: 'user',
-          content: text
+    const response = await axios.post(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        contents: [{
+          parts: [{
+            text: `${prompt}\n\nText: ${text}`
+          }]
+        }],
+        generationConfig: {
+          thinkingConfig: {
+            thinkingLevel: "high"
+          }
         }
-      ],
-    }, {
-      headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-        'Content-Type': 'application/json',
       },
-    });
+      {
+        headers: { 'Content-Type': 'application/json' }
+      }
+    );
 
-    return response.data.choices[0].message.content.trim();
+    return response.data.candidates[0].content.parts[0].text.trim();
   } catch (error) {
-    console.error('Tweet generation error:', error);
+    console.error('Tweet generation error (Gemini):', error);
     return 'Error generating tweet.';
   }
 };
+
+

@@ -2,6 +2,7 @@
   "expo": {
     "name": "Vecord",
     "slug": "vecord",
+    "scheme": "vecord",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,14 +16,13 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fengzhiping.vecord",
-      "buildNumber": "2",
+      "buildNumber": "3",
       "appleTeamId": "SYHV2CQ5LW",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone directly on the iPhone to record voice notes.",
         "UIFileSharingEnabled": true,
         "LSSupportsOpeningDocumentsInPlace": true,
         "UIBackgroundModes": [
-          "audio",
           "audio"
         ],
         "ITSAppUsesNonExemptEncryption": false
@@ -46,7 +46,6 @@
       }
     },
     "plugins": [
-      "./plugin/withWatchApp",
       "expo-web-browser",
       "expo-secure-store"
     ]

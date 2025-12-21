@@ -1,6 +1,7 @@
 import Foundation
 import WatchConnectivity
 import SwiftUI
+import Combine
 
 class ConnectivityProvider: NSObject, ObservableObject, WCSessionDelegate {
     @Published var isReachable = false

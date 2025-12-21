@@ -67,6 +67,12 @@ const withWatchApp = (config) => {
             console.log('Adding Watch App target...');
             targetParams = pbxProject.addTarget(WATCH_APP_NAME, 'watch2_app', WATCH_APP_NAME);
 
+            // Explicitly create build phases since addTarget might not for watch2_app
+            pbxProject.addBuildPhase([], 'PBXSourcesBuildPhase', 'Sources', targetParams.uuid);
+            pbxProject.addBuildPhase([], 'PBXResourcesBuildPhase', 'Resources', targetParams.uuid);
+            pbxProject.addBuildPhase([], 'PBXFrameworksBuildPhase', 'Frameworks', targetParams.uuid);
+
+
             // Setup Resources loop only on creation to avoid duplicates/mess (idempotency is hard)
             // ... OR we should check if files exist? 
             // Ideally we should update resources too, but for now let's focus on Build Settings.
@@ -84,8 +90,20 @@ const withWatchApp = (config) => {
             // Copy source files
             const sourceFiles = fs.readdirSync(WATCH_ROOT);
 
-            // Create a PBX group
-            const pbxGroup = pbxProject.addPbxGroup(sourceFiles, WATCH_APP_NAME, WATCH_APP_NAME);
+            // Create a PBX group (Empty files list to avoid creating duplicate refs, Path is empty to allow explicit paths)
+            const pbxGroup = pbxProject.addPbxGroup([], WATCH_APP_NAME, WATCH_APP_NAME); // 3rd arg is path. If we set it, children are relative.
+
+            // Resetting path logic:
+            // If we set Group Path to WATCH_APP_NAME ('WatchApp'), children should just be 'filename'.
+            // But verify addSourceFile behavior.
+
+            // BETTER APPROACH: Make Group abstract (no path) or correct path.
+            // Let's use: Group Path = WATCH_APP_NAME. Child Path = filename.
+
+            // To do this, we must ensure addSourceFile doesn't fail.
+            // Earlier failure might be due to addPbxGroup creating refs.
+            // So we pass [] to addPbxGroup.
+
 
             // Link the group to the main group
             const mainGroupKey = pbxProject.getFirstProject().firstProject.mainGroup;
@@ -97,7 +115,8 @@ const withWatchApp = (config) => {
                 fs.copyFileSync(srcPath, destPath);
 
                 // Add file to project and target
-                pbxProject.addSourceFile(path.join(WATCH_APP_NAME, file), { target: targetParams.uuid }, pbxGroup.uuid);
+                // If Group has path 'WatchApp', we just use 'file' (e.g. 'WatchApp.swift')
+                pbxProject.addSourceFile(file, { target: targetParams.uuid }, pbxGroup.uuid);
             });
 
             const bundleIdentifier = config.ios?.bundleIdentifier || 'com.example.app';

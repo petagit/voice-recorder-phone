@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { StyleSheet, Text, View, FlatList, TouchableOpacity, ActivityIndicator, Alert, Button, Platform, Share, Linking, Modal, TextInput, ScrollView, Animated, Easing } from 'react-native';
-import { Audio } from 'expo-av';
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import * as Clipboard from 'expo-clipboard';
 import * as Notifications from 'expo-notifications';
 import { Ionicons } from '@expo/vector-icons';
@@ -48,6 +48,55 @@ export default function HomeScreen() {
     const [permissionResponse, requestPermission] = Audio.usePermissions();
     const [storageType, setStorageTypeState] = useState<StorageType>('local');
     const { colors, isDark } = useTheme();
+
+    // Live Activity Management
+    const startLiveActivity = async () => {
+        try {
+            if (Platform.OS === 'ios') {
+                const { LiveActivity } = require('react-native-live-activity');
+                // Start the activity
+                await LiveActivity.startActivity({
+                    activityId: 'recording',
+                    attributes: {
+                        recordingTitle: 'Voice Note',
+                        recordingStartDate: new Date().toISOString()
+                    },
+                    contentState: {
+                        duration: '00:00',
+                        isRecording: true,
+                        recordingStartDate: new Date().toISOString()
+                    },
+                    pushToken: null,
+                });
+            }
+        } catch (e) {
+            console.log('Live Activity error:', e);
+        }
+    };
+
+    const stopLiveActivity = async () => {
+        try {
+            if (Platform.OS === 'ios') {
+                const { LiveActivity } = require('react-native-live-activity');
+                await LiveActivity.endActivity('recording');
+            }
+        } catch (e) {
+            console.log('Live Activity error:', e);
+        }
+    };
+
+    const handleStorageChange = async (type: StorageType) => {
+        await setStoragePreference(type);
+        setStorageTypeState(type);
+        setRecordings([]);
+        try {
+            const notes = await loadAllNotes();
+            setRecordings(notes as Recording[]);
+        } catch (e) {
+            console.error(e);
+            Alert.alert('Error', 'Failed to load notes from ' + type);
+        }
+    };
 
     const handleNewFile = async (uri: string) => {
         const newRecording: Recording = {
@@ -110,6 +159,9 @@ export default function HomeScreen() {
                 allowsRecordingIOS: true,
                 playsInSilentModeIOS: true,
                 staysActiveInBackground: true,
+                interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+                interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+                shouldDuckAndroid: true,
             });
 
             console.log('Starting recording..');
@@ -128,6 +180,9 @@ export default function HomeScreen() {
                 },
                 trigger: null,
             });
+
+            // Start Live Activity
+            await startLiveActivity();
         } catch (err) {
             console.error('Failed to start recording', err);
             Alert.alert('Error', 'Failed to start recording');
@@ -139,6 +194,7 @@ export default function HomeScreen() {
         setRecording(null);
         setIsRecording(false);
         await recording?.stopAndUnloadAsync();
+        await stopLiveActivity(); // End Live Activity
         await Notifications.dismissAllNotificationsAsync();
 
         const uri = recording?.getURI();
@@ -191,23 +247,39 @@ export default function HomeScreen() {
         return unsubscribe;
     }, []);
 
+    // Deep Link Handler for Widget Stop Button
+    useEffect(() => {
+        const handleDeepLink = (event: { url: string }) => {
+            if (event.url.includes('stop-recording')) {
+                console.log('Stop recording triggered from Widget/DeepLink');
+                if (isRecording) {
+                    stopRecording(); // This will refer to the function defined below via hoisting/ref
+                    // Wait, stopRecording is defined below as a const.
+                    // It will NOT be available here if we are just defining it.
+                    // BUT, `stopRecording` is a `const` function.
+                    // If we define THIS effect before `stopRecording`, JS rules say we can't access it?
+                    // Depends if it's called synchronously. It's called asynchronously in the callback.
+                    // By the time the callback runs, `stopRecording` (const) is initialized.
+                    // So this is SAFE.
+                }
+            }
+        };
+
+        const subscription = Linking.addEventListener('url', handleDeepLink);
+
+        Linking.getInitialURL().then((url) => {
+            // Logic
+        });
+
+        return () => {
+            subscription.remove();
+        };
+    }, [isRecording]);
+
     if (!isAppReady) {
         return <LoadingScreen />;
     }
 
-    const handleStorageChange = async (type: StorageType) => {
-        await setStoragePreference(type);
-        setStorageTypeState(type);
-        // Reload notes for the new storage
-        setRecordings([]); // Clear current list
-        try {
-            const notes = await loadAllNotes();
-            setRecordings(notes as Recording[]);
-        } catch (e) {
-            console.error(e);
-            Alert.alert('Error', 'Failed to load notes from ' + type);
-        }
-    };
 
 
 
@@ -426,6 +498,32 @@ export default function HomeScreen() {
                             </TouchableOpacity>
                         </View>
                     </View>
+                </View>
+            </Modal>
+
+
+            <Modal
+                animationType="fade"
+                transparent={false}
+                visible={isRecording}
+                onRequestClose={() => { }} // Block back button closing
+            >
+                <View style={[styles.recordingModalContainer, { backgroundColor: colors.background }]}>
+                    <StatusBar style={isDark ? 'light' : 'dark'} />
+                    <View style={styles.recordingContent}>
+                        <View style={styles.pulsingIndicator} />
+                        <Text style={[styles.recordingTitle, { color: colors.text }]}>Recording in progress</Text>
+                        <Text style={[styles.recordingSubtitle, { color: colors.subtext }]}>
+                            You can put the app in the background or lock the screen; the recording will continue.
+                        </Text>
+                    </View>
+
+                    <TouchableOpacity
+                        style={[styles.recordButton, styles.recordingButton, { marginBottom: 50 }]}
+                        onPress={stopRecording}
+                    >
+                        <Text style={[styles.recordButtonText, { color: '#000000' }]}>Stop Recording</Text>
+                    </TouchableOpacity>
                 </View>
             </Modal>
 
@@ -794,6 +892,38 @@ const styles = StyleSheet.create({
     debugText: {
         fontSize: 12,
         marginBottom: 2,
+    },
+    recordingModalContainer: {
+        flex: 1,
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: 40,
+        paddingTop: 100,
+    },
+    recordingContent: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    recordingTitle: {
+        fontSize: 28,
+        fontWeight: 'bold',
+        marginTop: 24,
+        textAlign: 'center',
+    },
+    recordingSubtitle: {
+        fontSize: 16,
+        textAlign: 'center',
+        marginTop: 16,
+        lineHeight: 24,
+        opacity: 0.8,
+    },
+    pulsingIndicator: {
+        width: 20,
+        height: 20,
+        borderRadius: 10,
+        backgroundColor: '#FF3B30',
+        marginBottom: 10,
     },
 });
 

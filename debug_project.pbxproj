@@ -11,15 +11,11 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
-		83AD2B2575DF47D99F49043B /* WatchApp.app in Copy Files */ = {isa = PBXBuildFile; fileRef = C19B84DB06A24137960FF1DA /* WatchApp.app */; };
-		D73C23012DD64BEABD83495F /* ConnectivityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8652ABC72A2E4278B9C19CC4 /* ConnectivityProvider.swift */; };
-		47E88D7DF35742AD87B9F625 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EC888FF25D54DDC9F8CF342 /* ContentView.swift */; };
-		52FC15007E054C2EBF93F931 /* RecordIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = B83DF971D7E448A69F7C3459 /* RecordIntent.swift */; };
-		DE04B7EF706741D3B1C22CB2 /* WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB71A75434434D8CAE5B620C /* WatchApp.swift */; };
-		86AB08765EC24C66AF25F4CE /* ConnectivityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2230A9FAB4441EBB899415D /* ConnectivityProvider.swift */; };
-		16D68E86248646068781A62F /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CC4B78D5053E48C09D5509B2 /* ContentView.swift */; };
-		87EFB1519F3B4628B5C7E585 /* RecordIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 622C85A001E342CE8E3F81FB /* RecordIntent.swift */; };
-		2C822298A2024D2B8BE3A981 /* WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A60B2483819D4510AADB9368 /* WatchApp.swift */; };
+		4852B693A6D34332AE0DFAE9 /* WatchApp.app in Copy Files */ = {isa = PBXBuildFile; fileRef = 524A960182C64AF6A63798BA /* WatchApp.app */; };
+		DF602313A1A443369E571AF6 /* ConnectivityProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55356E28E311460694DF1B95 /* ConnectivityProvider.swift */; };
+		B6988E92205044D09D32DE64 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96EC4729AAED4C82AC16FDFC /* ContentView.swift */; };
+		F9A0178EB4784BD4AFB3AE22 /* RecordIntent.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7BE0A81927174515BF1E3446 /* RecordIntent.swift */; };
+		8739C38B80BF431F8B356997 /* WatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A8AE1AD4AB0D4D568F1AB769 /* WatchApp.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -31,20 +27,23 @@
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Vecord/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Vecord-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Vecord-Bridging-Header.h"; path = "Vecord/Vecord-Bridging-Header.h"; sourceTree = "<group>"; };
-		C19B84DB06A24137960FF1DA /* WatchApp.app */ = {isa = PBXFileReference; name = "WatchApp.app"; path = "WatchApp.app"; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = undefined; lastKnownFileType = undefined; explicitFileType = "wrapper.application"; includeInIndex = 0; };
-		8652ABC72A2E4278B9C19CC4 /* ConnectivityProvider.swift */ = {isa = PBXFileReference; name = "ConnectivityProvider.swift"; path = "ConnectivityProvider.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		6EC888FF25D54DDC9F8CF342 /* ContentView.swift */ = {isa = PBXFileReference; name = "ContentView.swift"; path = "ContentView.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		B83DF971D7E448A69F7C3459 /* RecordIntent.swift */ = {isa = PBXFileReference; name = "RecordIntent.swift"; path = "RecordIntent.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		BB71A75434434D8CAE5B620C /* WatchApp.swift */ = {isa = PBXFileReference; name = "WatchApp.swift"; path = "WatchApp.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		F2230A9FAB4441EBB899415D /* ConnectivityProvider.swift */ = {isa = PBXFileReference; name = "ConnectivityProvider.swift"; path = "WatchApp/ConnectivityProvider.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		CC4B78D5053E48C09D5509B2 /* ContentView.swift */ = {isa = PBXFileReference; name = "ContentView.swift"; path = "WatchApp/ContentView.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		622C85A001E342CE8E3F81FB /* RecordIntent.swift */ = {isa = PBXFileReference; name = "RecordIntent.swift"; path = "WatchApp/RecordIntent.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		A60B2483819D4510AADB9368 /* WatchApp.swift */ = {isa = PBXFileReference; name = "WatchApp.swift"; path = "WatchApp/WatchApp.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
-		05AE3025FB564986AF7AAFCC /* Info.plist */ = {isa = PBXFileReference; name = "Info.plist"; path = "Info.plist"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = text.plist.xml; explicitFileType = undefined; includeInIndex = 0; };
+		524A960182C64AF6A63798BA /* WatchApp.app */ = {isa = PBXFileReference; name = "WatchApp.app"; path = "WatchApp.app"; sourceTree = BUILT_PRODUCTS_DIR; fileEncoding = undefined; lastKnownFileType = undefined; explicitFileType = "wrapper.application"; includeInIndex = 0; };
+		55356E28E311460694DF1B95 /* ConnectivityProvider.swift */ = {isa = PBXFileReference; name = "ConnectivityProvider.swift"; path = "ConnectivityProvider.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		96EC4729AAED4C82AC16FDFC /* ContentView.swift */ = {isa = PBXFileReference; name = "ContentView.swift"; path = "ContentView.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		7BE0A81927174515BF1E3446 /* RecordIntent.swift */ = {isa = PBXFileReference; name = "RecordIntent.swift"; path = "RecordIntent.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		A8AE1AD4AB0D4D568F1AB769 /* WatchApp.swift */ = {isa = PBXFileReference; name = "WatchApp.swift"; path = "WatchApp.swift"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = sourcecode.swift; explicitFileType = undefined; includeInIndex = 0; };
+		9B25E034699D455AB9334402 /* Info.plist */ = {isa = PBXFileReference; name = "Info.plist"; path = "Info.plist"; sourceTree = "<group>"; fileEncoding = 4; lastKnownFileType = text.plist.xml; explicitFileType = undefined; includeInIndex = 0; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		13B07F8C1A680F5B00A75B9A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FE89714439284187A852899D /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -89,7 +88,7 @@
 				832341AE1AAA6A7D00B99B32 /* Libraries */,
 				83CBBA001A601CBA00E9B192 /* Products */,
 				2D16E6871FA4F8E400B85C8A /* Frameworks */,
-				AD237B351E8844C3BF80217E /* WatchApp */,
+				6CA33B10C90846A0ADBDD781 /* WatchApp */,
 			);
 			indentWidth = 2;
 			sourceTree = "<group>";
@@ -100,7 +99,7 @@
 			isa = PBXGroup;
 			children = (
 				13B07F961A680F5B00A75B9A /* Vecord.app */,
-				C19B84DB06A24137960FF1DA /* WatchApp.app */,
+				524A960182C64AF6A63798BA /* WatchApp.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -114,18 +113,14 @@
 			path = Vecord/Supporting;
 			sourceTree = "<group>";
 		};
-		AD237B351E8844C3BF80217E /* WatchApp */ = {
+		6CA33B10C90846A0ADBDD781 /* WatchApp */ = {
 			isa = PBXGroup;
 			children = (
-				8652ABC72A2E4278B9C19CC4 /* ConnectivityProvider.swift */,
-				6EC888FF25D54DDC9F8CF342 /* ContentView.swift */,
-				B83DF971D7E448A69F7C3459 /* RecordIntent.swift */,
-				BB71A75434434D8CAE5B620C /* WatchApp.swift */,
-				F2230A9FAB4441EBB899415D /* ConnectivityProvider.swift */,
-				CC4B78D5053E48C09D5509B2 /* ContentView.swift */,
-				622C85A001E342CE8E3F81FB /* RecordIntent.swift */,
-				A60B2483819D4510AADB9368 /* WatchApp.swift */,
-				05AE3025FB564986AF7AAFCC /* Info.plist */,
+				55356E28E311460694DF1B95 /* ConnectivityProvider.swift */,
+				96EC4729AAED4C82AC16FDFC /* ContentView.swift */,
+				7BE0A81927174515BF1E3446 /* RecordIntent.swift */,
+				A8AE1AD4AB0D4D568F1AB769 /* WatchApp.swift */,
+				9B25E034699D455AB9334402 /* Info.plist */,
 			);
 			name = WatchApp;
 			path = WatchApp;
@@ -144,7 +139,7 @@
 				13B07F8E1A680F5B00A75B9A /* Resources */,
 				00DD1BFF1BD5951E006B06BC /* Bundle React Native code and images */,
 				800E24972A6A228C8D4807E9 /* [CP] Copy Pods Resources */,
-				D9E716A9DD264BD7974AEE39 /* Embed Watch Content */,
+				D7EC3F41D0E943528505B4B7 /* Embed Watch Content */,
 			);
 			buildRules = (
 			);
@@ -155,14 +150,17 @@
 			productReference = 13B07F961A680F5B00A75B9A /* Vecord.app */;
 			productType = "com.apple.product-type.application";
 		};
-		6D6203BFD0B34DF984A7D46C /* "WatchApp" */ = {
+		45A45C9FD17141C9A708C36F /* "WatchApp" */ = {
 			isa = PBXNativeTarget;
 			name = "WatchApp";
 			productName = "WatchApp";
-			productReference = C19B84DB06A24137960FF1DA;
+			productReference = 524A960182C64AF6A63798BA;
 			productType = "com.apple.product-type.application.watchapp2";
-			buildConfigurationList = 4B0B5BCAD7C34096A342D463;
+			buildConfigurationList = 949B6BBD58DA4B7CBAC82C2B;
 			buildPhases = (
+				872BD7EBE8164CB8B0A0069E /* Sources */,
+				F9627FB2E2D5474B93103EC4 /* Resources */,
+				FE89714439284187A852899D /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -196,7 +194,7 @@
 			projectRoot = "";
 			targets = (
 				13B07F861A680F5B00A75B9A /* Vecord */,
-				6D6203BFD0B34DF984A7D46C /* "WatchApp" */,
+				45A45C9FD17141C9A708C36F /* "WatchApp" */,
 			);
 		};
 /* End PBXProject section */
@@ -209,6 +207,13 @@
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F9627FB2E2D5474B93103EC4 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,10 +289,17 @@
 			buildActionMask = 2147483647;
 			files = (
 				F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */,
-				86AB08765EC24C66AF25F4CE /* ConnectivityProvider.swift in Sources */,
-				16D68E86248646068781A62F /* ContentView.swift in Sources */,
-				87EFB1519F3B4628B5C7E585 /* RecordIntent.swift in Sources */,
-				2C822298A2024D2B8BE3A981 /* WatchApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		872BD7EBE8164CB8B0A0069E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DF602313A1A443369E571AF6 /* ConnectivityProvider.swift in Sources */,
+				B6988E92205044D09D32DE64 /* ContentView.swift in Sources */,
+				F9A0178EB4784BD4AFB3AE22 /* RecordIntent.swift in Sources */,
+				8739C38B80BF431F8B356997 /* WatchApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -467,7 +479,7 @@
 			};
 			name = Release;
 		};
-		6F8B5ED8B4D3495BA449C6BF /* Debug */ = {
+		53DBD829EC5D4EBC8D340FBA /* Debug */ = {
 			name = Debug;
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -491,7 +503,7 @@
 				DEVELOPMENT_TEAM = SYHV2CQ5LW;
 			};
 		};
-		C55CB3B7EFB7495DB54D1053 /* Release */ = {
+		63592F0A7DA4468DBB9C208B /* Release */ = {
 			name = Release;
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -532,11 +544,11 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4B0B5BCAD7C34096A342D463 /* Build configuration list for PBXNativeTarget "WatchApp" */ = {
+		949B6BBD58DA4B7CBAC82C2B /* Build configuration list for PBXNativeTarget "WatchApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				6F8B5ED8B4D3495BA449C6BF /* Debug */,
-				C55CB3B7EFB7495DB54D1053 /* Release */,
+				53DBD829EC5D4EBC8D340FBA /* Debug */,
+				63592F0A7DA4468DBB9C208B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -544,11 +556,11 @@
 /* End XCConfigurationList section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		D9E716A9DD264BD7974AEE39 /* Embed Watch Content */ = {
+		D7EC3F41D0E943528505B4B7 /* Embed Watch Content */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83AD2B2575DF47D99F49043B /* "WatchApp.app" in Resources */,
+				4852B693A6D34332AE0DFAE9 /* "WatchApp.app" in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			name = "Embed Watch Content";

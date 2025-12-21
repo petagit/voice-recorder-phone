@@ -1,0 +1,13 @@
+diff --git a/node_modules/react-native-live-activity/react-native-live-activity.podspec b/node_modules/react-native-live-activity/react-native-live-activity.podspec
+index 95091d6..b8928df 100644
+--- a/node_modules/react-native-live-activity/react-native-live-activity.podspec
++++ b/node_modules/react-native-live-activity/react-native-live-activity.podspec
+@@ -27,7 +27,7 @@ Pod::Spec.new do |s|
+     }
+ 
+     s.dependency "React-Codegen"
+-    s.dependency "RCT-Folly"
++    # s.dependency "RCT-Folly"
+     s.dependency "RCTRequired"
+     s.dependency "RCTTypeSafety"
+     s.dependency "ReactCommon/turbomodule/core"

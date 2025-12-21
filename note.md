@@ -48,3 +48,22 @@ git push
 
 npx expo prebuild --platform ios --clean
 npx expo run:ios --device
+
+rm -rf ios
+npx expo run:ios --device
+
+
+rm -rf ios
+npx expo run:ios
+
+xcodebuild -workspace ios/Vecord.xcworkspace -scheme WatchApp -destination 'generic/platform=watchOS Simulator' build
+
+
+
+
+npm run build-and-submit:ios
+npm run submit:ios
+
+
+npx eas build --platform ios --profile production
+npx eas submit --platform ios --profile production
