@@ -67,3 +67,6 @@ npm run submit:ios
 
 npx eas build --platform ios --profile production
 npx eas submit --platform ios --profile production
+
+
+npx eas env:create --name EXPO_PUBLIC_GEMINI_API_KEY --value "YOUR_GEMINI_API_KEY"

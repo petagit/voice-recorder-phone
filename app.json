@@ -16,7 +16,6 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.fengzhiping.vecord",
-      "buildNumber": "3",
       "appleTeamId": "SYHV2CQ5LW",
       "infoPlist": {
         "NSMicrophoneUsageDescription": "Allow $(PRODUCT_NAME) to access your microphone directly on the iPhone to record voice notes.",

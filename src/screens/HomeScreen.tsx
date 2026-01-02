@@ -511,7 +511,7 @@ export default function HomeScreen() {
                 <View style={[styles.recordingModalContainer, { backgroundColor: colors.background }]}>
                     <StatusBar style={isDark ? 'light' : 'dark'} />
                     <View style={styles.recordingContent}>
-                        <View style={styles.pulsingIndicator} />
+                        <GlowingPulsingDot color="#FF3B30" />
                         <Text style={[styles.recordingTitle, { color: colors.text }]}>Recording in progress</Text>
                         <Text style={[styles.recordingSubtitle, { color: colors.subtext }]}>
                             You can put the app in the background or lock the screen; the recording will continue.
@@ -919,13 +919,74 @@ const styles = StyleSheet.create({
         opacity: 0.8,
     },
     pulsingIndicator: {
-        width: 20,
-        height: 20,
-        borderRadius: 10,
+        width: 120,
+        height: 120,
+        borderRadius: 60,
         backgroundColor: '#FF3B30',
-        marginBottom: 10,
+        marginBottom: 40,
     },
 });
+
+const GlowingPulsingDot = ({ color }: { color: string }) => {
+    const scale = useRef(new Animated.Value(1)).current;
+    const opacity = useRef(new Animated.Value(0.6)).current;
+
+    useEffect(() => {
+        const pulse = () => {
+            Animated.parallel([
+                Animated.sequence([
+                    Animated.timing(scale, {
+                        toValue: 1.25,
+                        duration: 1200,
+                        easing: Easing.inOut(Easing.ease),
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(scale, {
+                        toValue: 1,
+                        duration: 1200,
+                        easing: Easing.inOut(Easing.ease),
+                        useNativeDriver: true,
+                    }),
+                ]),
+                Animated.sequence([
+                    Animated.timing(opacity, {
+                        toValue: 1,
+                        duration: 1200,
+                        easing: Easing.inOut(Easing.ease),
+                        useNativeDriver: true,
+                    }),
+                    Animated.timing(opacity, {
+                        toValue: 0.6,
+                        duration: 1200,
+                        easing: Easing.inOut(Easing.ease),
+                        useNativeDriver: true,
+                    }),
+                ]),
+            ]).start(() => pulse());
+        };
+        pulse();
+    }, []);
+
+    return (
+        <View style={{ alignItems: 'center', justifyContent: 'center' }}>
+            <Animated.View
+                style={[
+                    styles.pulsingIndicator,
+                    {
+                        backgroundColor: color,
+                        transform: [{ scale }],
+                        opacity,
+                        shadowColor: color,
+                        shadowOffset: { width: 0, height: 0 },
+                        shadowOpacity: 1,
+                        shadowRadius: 60, // Increased for more diffusion
+                        elevation: 20,
+                    },
+                ]}
+            />
+        </View>
+    );
+};
 
 const InternalProgressBar = ({ color, children }: { color: string, children?: React.ReactNode }) => {
     const progress = React.useRef(new Animated.Value(0)).current;
